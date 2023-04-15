@@ -1,0 +1,4 @@
+(lang dune 3.6)
+(name hw1)
+(sections (lib .) (bin ../../bin))
+(files (lib (META dune-package opam)) (bin (hw1)))
