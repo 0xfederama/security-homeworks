@@ -11,7 +11,7 @@ let _ = eval (
                 )
             ),
             Let("b", Call(Var "check", Var "pw"), 
-                If(Var "b", Print(CstS "password ok"), Print(CstS "password diff"))
+                If(Var "b", Print(CstS "password ok"), Print(CstS "password differs"))
             )
         ))
     ) [];;

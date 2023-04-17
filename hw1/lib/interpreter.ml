@@ -31,11 +31,16 @@ let rec eval (e : expr) (env : value env) : value =
   | Print x -> (
       let xval = eval x env in
       match xval with
-      | Int i -> print_endline(string_of_int i); Int i
-      | Bool b -> print_endline(string_of_bool b); Bool b
-      | String s -> print_endline(s); String s
-      | _ -> failwith "can only print int, bool or string"
-  )
+      | Int i ->
+          print_endline (string_of_int i);
+          Int i
+      | Bool b ->
+          print_endline (string_of_bool b);
+          Bool b
+      | String s ->
+          print_endline s;
+          String s
+      | _ -> failwith "can only print int, bool or string")
   | Prim (op, e1, e2) -> (
       let v1 = eval e1 env in
       let v2 = eval e2 env in
@@ -58,8 +63,7 @@ let rec eval (e : expr) (env : value env) : value =
       | Bool false -> eval e3 env
       | _ -> failwith "not a boolean guard")
   | Let (x, rhs, body) ->
-      if search env x then
-        failwith (x ^ " already defined")
+      if search env x then failwith (x ^ " already defined")
       else
         let xval = eval rhs env in
         let letenv = (x, xval) :: env in
@@ -74,15 +78,13 @@ let rec eval (e : expr) (env : value env) : value =
           eval body bodyenv
       | _ -> failwith "call not on a function")
   | Enclave (x, rhs, body) ->
-      if search env x then
-        failwith (x ^ " already defined")
+      if search env x then failwith (x ^ " already defined")
       else
         let rec eval_enc r glob_env enc_env =
           match r with
           | Fun (x, body) -> Closure (x, body, enc_env)
           | Secret (id, rhs, b) ->
-              if search env x then
-                failwith (id ^ " already defined")
+              if search env x then failwith (id ^ " already defined")
               else
                 let idval = eval rhs enc_env in
                 let enc_env = (id, idval) :: enc_env in
@@ -92,7 +94,7 @@ let rec eval (e : expr) (env : value env) : value =
               let glob_env = (id, idval) :: env in
               eval_enc b glob_env enc_env
           | End -> eval body glob_env
-          | _ -> failwith "not a fun, secret or gateway"
+          | _ -> failwith "not a fun, secret, gateway or end"
         in
         eval_enc rhs env env
   | Secret (_, _, _) -> failwith "secrets can only be defined inside enclaves"
