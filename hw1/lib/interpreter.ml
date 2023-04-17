@@ -58,9 +58,9 @@ let rec eval (e : expr) (env : value env) : value =
       | Bool false -> eval e3 env
       | _ -> failwith "not a boolean guard")
   | Let (x, rhs, body) ->
-      (* if Some (lookup env x) <> None then *)
-      (*   failwith (x ^ " already in environment") *)
-      (* else *)
+      if search env x then
+        failwith (x ^ " already defined")
+      else
         let xval = eval rhs env in
         let letenv = (x, xval) :: env in
         eval body letenv
@@ -73,17 +73,17 @@ let rec eval (e : expr) (env : value env) : value =
           let bodyenv = (x, xval) :: decenv in
           eval body bodyenv
       | _ -> failwith "call not on a function")
-  | Enclave (_, rhs, body) ->
-      (* if Some (lookup env x) <> None then *)
-      (*   failwith (x ^ " already in environment") *)
-      (* else *)
+  | Enclave (x, rhs, body) ->
+      if search env x then
+        failwith (x ^ " already defined")
+      else
         let rec eval_enc r glob_env enc_env =
           match r with
           | Fun (x, body) -> Closure (x, body, enc_env)
           | Secret (id, rhs, b) ->
-              (* if Some (lookup enc_env id) <> None then *)
-              (*   failwith (id ^ " already in the enviroment") *)
-              (* else *)
+              if search env x then
+                failwith (id ^ " already defined")
+              else
                 let idval = eval rhs enc_env in
                 let enc_env = (id, idval) :: enc_env in
                 eval_enc b glob_env enc_env

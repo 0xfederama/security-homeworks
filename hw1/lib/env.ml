@@ -6,6 +6,11 @@ let rec lookup env x =
   | [] -> failwith (x ^ " not found in the environment")
   | (y, v) :: l -> if x = y then v else lookup l x
 
+let rec search env x =
+    match env with
+    | [] -> false
+    | (y, _) :: l -> if x = y then true else search l x
+
 let rec print_int_env env x =
   match env with
   | [] -> failwith (x ^ " not found to print")
