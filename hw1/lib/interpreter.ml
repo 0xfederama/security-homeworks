@@ -126,7 +126,6 @@ let rec eval (e : expr) (env : value env) : value =
   | IncUntrusted rhs -> UntrustedClosure rhs
   | Execute (x, body) ->
       let xval = lookup env x in
-      let newenv = env in
       let _ =
         match xval with
         | UntrustedClosure rhs ->
@@ -177,7 +176,7 @@ let rec eval (e : expr) (env : value env) : value =
               | Execute _ ->
                   failwith "can't execute untrusted code inside untrusted"
             in
-            eval_untr rhs newenv
+            eval_untr rhs env
         | _ -> failwith (x ^ " is not untrusted code")
       in
-      eval body newenv
+      eval body env

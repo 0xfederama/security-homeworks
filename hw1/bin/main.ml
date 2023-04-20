@@ -27,6 +27,8 @@ let execWithoutFailure test env =
  6- [fail] include access secret var
  7- [fail] execute something not untrusted
  8- [fail] execute something else (var, ...)
+ 9- [fail] code uses some variable of the untrusted code
+10- [ ok ] execute untrusted code
 *)
 let tests = 
   [
@@ -134,6 +136,28 @@ let tests =
             Execute("f", CstSkip)
         )
 
+    ) [];
+    (* 9 - code uses some variable of the untrusted code *)
+    execWithFailure (
+        Let("untr",
+            IncUntrusted(
+                Let("x", CstS "untr_str", CstSkip)
+            ),
+            Execute("untr",
+                Print(Prim("=", CstS "s", Var "x"))
+            )
+        )
+    ) [];
+    (* 10 - execute untrusted code *)
+    execWithoutFailure(
+        Let("untr",
+            IncUntrusted(
+                CstSkip
+            ),
+            Execute("untr",
+                CstSkip
+            )
+        )
     ) [];
   ]
 
