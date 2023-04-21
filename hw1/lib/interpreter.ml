@@ -26,7 +26,7 @@ type value =
   | Int of int
   | Bool of bool
   | String of string
-  | Closure of ide * expr * value env * security
+  | Closure of ide * expr * value StringMap.t * security
   | EnclaveClosure of ide
   | UntrustedClosure of expr
 
@@ -58,7 +58,7 @@ let eval_print x =
       String s
   | _ -> failwith "can only print int, bool or string"
 
-let rec eval (e : expr) (env : value env) : value =
+let rec eval (e : expr) (env : 'v StringMap.t) : value =
   match e with
   | CstSkip -> Skip
   | CstI i -> Int i
@@ -78,10 +78,10 @@ let rec eval (e : expr) (env : value env) : value =
       | Bool false -> eval e3 env
       | _ -> failwith "not a boolean guard")
   | Let (x, rhs, body) ->
-      if search env x then failwith (x ^ " already defined")
+      if has_key env x then failwith (x ^ " already defined")
       else
         let xval = eval rhs env in
-        let letenv = (x, xval) :: env in
+        let letenv = insert env x xval in
         eval body letenv
   | Fun (x, body) -> Closure (x, body, env, Free)
   | Call (eFun, eArg) -> (
@@ -92,14 +92,14 @@ let rec eval (e : expr) (env : value env) : value =
             failwith "untrusted code must be executed inside \"execute\""
           else
             let xval = eval eArg env in
-            let bodyenv = (x, xval) :: decenv in
+            let bodyenv = insert decenv x xval in
             eval body bodyenv
       | _ -> failwith "call not on a function")
   | Enclave (x, rhs, body) ->
       let rec eval_enc r glob_env enc_env =
         match r with
         | Secret (id, rhs, b) ->
-            if search env id then failwith (id ^ " already defined")
+            if has_key env id then failwith (id ^ " already defined")
             else
               let idval = eval rhs enc_env in
               let idvalenc =
@@ -107,15 +107,16 @@ let rec eval (e : expr) (env : value env) : value =
                 | Closure (a1, b1, c1, _) -> Closure (a1, b1, c1, Enclaved)
                 | _ -> idval
               in
-              let enc_env = (id, idvalenc) :: enc_env in
+              let enc_env = insert enc_env id idvalenc in
               eval_enc b glob_env enc_env
         | Gateway (id, b) ->
             let idval = lookup enc_env id in
-            let glob_env = (id, idval) :: env in
+            let glob_env = insert env id idval in
             eval_enc b glob_env enc_env
         | CstSkip -> Skip
         | End ->
-            let newenv = (x, EnclaveClosure x) :: glob_env in
+            let encval = EnclaveClosure x in
+            let newenv = insert glob_env x encval in
             eval body newenv
         | _ -> failwith "not a fun, secret, gateway or end"
       in
@@ -158,14 +159,14 @@ let rec eval (e : expr) (env : value env) : value =
                           "can't call enclaved functions in untrusted code"
                       else
                         let xval = eval_untr eArg uenv in
-                        let bodyenv = (x, xval) :: decenv in
+                        let bodyenv = insert decenv x xval in
                         eval_untr body bodyenv
                   | _ -> failwith "call not on a function")
               | Let (y, rh, bod) ->
-                  if search uenv y then failwith (y ^ " already defined")
+                  if has_key uenv y then failwith (y ^ " already defined")
                   else
                     let yval = eval_untr rh uenv in
-                    let uenv = (y, yval) :: uenv in
+                    let uenv = insert uenv y yval in
                     eval_untr bod uenv
               | Enclave _ -> failwith "can't use enclave inside include"
               | End -> failwith "should not need end"
@@ -180,3 +181,7 @@ let rec eval (e : expr) (env : value env) : value =
         | _ -> failwith (x ^ " is not untrusted code")
       in
       eval body env
+
+let run code =
+  let env = create_env in
+  eval code env
