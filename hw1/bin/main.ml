@@ -29,9 +29,9 @@ let execWithoutFailure test env =
  8- [fail] execute something else (var, ...)
  9- [fail] code uses some variable of the untrusted code
 10- [ ok ] execute untrusted code
+11- [fail] enclave declares a variables already declared outside
 *)
-let tests = 
-  [
+let tests = [
     (* 1 - code executes gateway fun *)
     execWithoutFailure (
         Let("pw", CstS "right",
@@ -159,7 +159,17 @@ let tests =
             )
         )
     ) [];
-  ]
+    (* 11 - enclave declares a variables already declared outside *)
+    execWithFailure(
+        Let("outside", CstS "str1",
+            Enclave(
+                "encl",
+                Secret("outside", CstS "str2", CstSkip),
+                End
+            )
+        )
+    ) [];
+]
 
 let rec execute_tests t i =
   match t with
