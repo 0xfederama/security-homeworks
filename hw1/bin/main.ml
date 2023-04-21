@@ -1,17 +1,17 @@
 open Hw1.Interpreter
 
-let execWithFailure test env =
+let execWithFailure test =
   let value = 
-    try eval test env
+    try run test
     with Failure _ ->
       (* print_endline f; *)
       Int 1
   in 
   assert (value = Int 1)
 
-let execWithoutFailure test env =
+let execWithoutFailure test =
   let value = 
-    try eval test env 
+    try run test
     with Failure _ -> 
       (* print_endline f; *)
       Int 0
@@ -48,7 +48,7 @@ let tests = [
                 )
             )
         )
-    ) [];
+    );
     (* 2 - code accesses secret vars *)
     execWithFailure (
         Let("pw", CstS "wrong",
@@ -63,14 +63,14 @@ let tests = [
                 If(Prim("=", Var "pw", Var "pass"), CstSkip, CstSkip)
             )
         )
-    ) [];
+    );
     (* 3 - enclave declares something not secret/gateway *)
     execWithFailure (
         Enclave("encl",
             Let("fail", CstSkip, CstSkip),
             End
         )
-    ) [];
+    );
     (* 4 - include executes fun free *)
     execWithoutFailure (
         Let("f", Fun("arg", CstSkip),
@@ -81,7 +81,7 @@ let tests = [
                 Execute("untr", CstSkip)
             )
         )
-    ) [];
+    );
     (* 5 - include executes fun enclaved *)
     execWithFailure (
         Enclave("enc",
@@ -103,7 +103,7 @@ let tests = [
                 Execute("untr", CstSkip)
             )
         )
-    ) [];
+    );
     (* 6 - include access secret var *)
     execWithFailure (
         Enclave("enc",
@@ -123,20 +123,19 @@ let tests = [
                 Execute("untr", CstSkip)
             )
         )
-    ) [];
+    );
     (* 7 - execute something not untrusted *)
     execWithFailure(
         Let("f", Fun("arg", CstSkip),
             Execute("f", CstSkip)
         )
-    ) [];
+    );
     (* 8 - execute something else (var, ...) *)
     execWithFailure (
         Let("f", CstS "no",
             Execute("f", CstSkip)
         )
-
-    ) [];
+    );
     (* 9 - code uses some variable of the untrusted code *)
     execWithFailure (
         Let("untr",
@@ -147,7 +146,7 @@ let tests = [
                 Print(Prim("=", CstS "s", Var "x"))
             )
         )
-    ) [];
+    );
     (* 10 - execute untrusted code *)
     execWithoutFailure(
         Let("untr",
@@ -158,7 +157,7 @@ let tests = [
                 CstSkip
             )
         )
-    ) [];
+    );
     (* 11 - enclave declares a variables already declared outside *)
     execWithFailure(
         Let("outside", CstS "str1",
@@ -168,7 +167,7 @@ let tests = [
                 End
             )
         )
-    ) [];
+    );
 ]
 
 let rec execute_tests t i =

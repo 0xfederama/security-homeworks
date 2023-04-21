@@ -126,7 +126,6 @@ let rec eval (e : expr) (env : 'v StringMap.t) : value =
   | End -> failwith "end can only end an enclave or an include"
   | IncUntrusted rhs -> UntrustedClosure rhs
   | Execute (x, body) ->
-      let () = print_endline ("executing " ^ x) in
       let xval = lookup env x in
       let _ =
         match xval with
