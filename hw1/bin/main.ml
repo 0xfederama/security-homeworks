@@ -24,12 +24,12 @@ let execWithoutFailure test =
  3- [fail] enclave declares something not secret/gateway
  4- [ ok ] untrusted code executes fun free
  5- [fail] untrusted code executes fun enclaved
- 6- [fail] untrusted code access secret var
+ 6- [fail] untrusted code accesses secret var
  7- [fail] execute something not untrusted
  8- [fail] execute something else (var, ...)
  9- [fail] code uses some variable of the untrusted code
 10- [ ok ] execute untrusted code
-11- [fail] enclave declares a variables already declared outside
+11- [fail] enclave declares a variable already declared outside
 *)
 let tests = [
     (* 1 - code executes gateway fun *)
@@ -71,7 +71,7 @@ let tests = [
             End
         )
     );
-    (* 4 - include executes fun free *)
+    (* 4 - untrusted code executes fun free *)
     execWithoutFailure (
         Let("f", Fun("arg", CstSkip),
             Let("untr",
@@ -82,7 +82,7 @@ let tests = [
             )
         )
     );
-    (* 5 - include executes fun enclaved *)
+    (* 5 - untrusted code executes fun enclaved *)
     execWithFailure (
         Enclave(
             Secret("pass", CstS "rightpw",
@@ -104,7 +104,7 @@ let tests = [
             )
         )
     );
-    (* 6 - include access secret var *)
+    (* 6 - untrusted code access secret var *)
     execWithFailure (
         Enclave(
             Secret("pass", CstS "rightpw",
@@ -158,7 +158,7 @@ let tests = [
             )
         )
     );
-    (* 11 - enclave declares a variables already declared outside *)
+    (* 11 - enclave declares a variable already declared outside *)
     execWithFailure(
         Let("outside", CstS "str1",
             Enclave(

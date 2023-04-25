@@ -27,7 +27,6 @@ type value =
   | Bool of bool
   | String of string
   | Closure of ide * expr * value StringMap.t * security
-  | EnclaveClosure
   | UntrustedClosure of expr
 
 let eval_prim g e1 e2 =
