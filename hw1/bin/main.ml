@@ -22,9 +22,9 @@ let execWithoutFailure test =
  1- [ ok ] code executes fun gateway
  2- [fail] code accesses secret vars
  3- [fail] enclave declares something not secret/gateway
- 4- [ ok ] include executes fun free
- 5- [fail] include executes fun enclaved
- 6- [fail] include access secret var
+ 4- [ ok ] untrusted code executes fun free
+ 5- [fail] untrusted code executes fun enclaved
+ 6- [fail] untrusted code access secret var
  7- [fail] execute something not untrusted
  8- [fail] execute something else (var, ...)
  9- [fail] code uses some variable of the untrusted code
