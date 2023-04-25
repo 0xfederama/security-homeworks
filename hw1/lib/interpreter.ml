@@ -11,7 +11,7 @@ type expr =
   | Let of ide * expr * expr
   | Fun of ide * expr
   | Call of expr * expr
-  | Enclave of ide * expr * expr
+  | Enclave of expr * expr
   | Secret of ide * expr * expr
   | Gateway of ide * expr
   | Print of expr
@@ -27,7 +27,7 @@ type value =
   | Bool of bool
   | String of string
   | Closure of ide * expr * value StringMap.t * security
-  | EnclaveClosure of ide
+  | EnclaveClosure
   | UntrustedClosure of expr
 
 let eval_prim g e1 e2 =
@@ -95,7 +95,7 @@ let rec eval (e : expr) (env : 'v StringMap.t) : value =
             let bodyenv = insert decenv x xval in
             eval body bodyenv
       | _ -> failwith "call not on a function")
-  | Enclave (x, rhs, body) ->
+  | Enclave (rhs, body) ->
       let rec eval_enc r glob_env enc_env =
         match r with
         | Secret (id, rhs, b) ->
@@ -110,14 +110,14 @@ let rec eval (e : expr) (env : 'v StringMap.t) : value =
               let enc_env = insert enc_env id idvalenc in
               eval_enc b glob_env enc_env
         | Gateway (id, b) ->
-            let idval = lookup enc_env id in
-            let glob_env = insert env id idval in
-            eval_enc b glob_env enc_env
+            if has_key env id then failwith (id ^ " already defined")
+            else
+              let idval = lookup enc_env id in
+              let glob_env = insert env id idval in
+              eval_enc b glob_env enc_env
         | CstSkip -> Skip
         | End ->
-            let encval = EnclaveClosure x in
-            let newenv = insert glob_env x encval in
-            eval body newenv
+            eval body glob_env
         | _ -> failwith "not a fun, secret, gateway or end"
       in
       eval_enc rhs env env

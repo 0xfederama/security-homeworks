@@ -35,7 +35,7 @@ let tests = [
     (* 1 - code executes gateway fun *)
     execWithoutFailure (
         Let("pw", CstS "right",
-            Enclave("encl",
+            Enclave(
                 Secret("pass", CstS "right",
                     Secret("check", Fun("arg", Prim("=", Var "arg", Var "pass")),
                         Gateway("check",
@@ -52,7 +52,7 @@ let tests = [
     (* 2 - code accesses secret vars *)
     execWithFailure (
         Let("pw", CstS "wrong",
-            Enclave("encl",
+            Enclave(
                 Secret("pass", CstS "right",
                     Secret("check", Fun("arg", Prim("=", Var "arg", Var "pass")),
                         Gateway("check",
@@ -66,7 +66,7 @@ let tests = [
     );
     (* 3 - enclave declares something not secret/gateway *)
     execWithFailure (
-        Enclave("encl",
+        Enclave(
             Let("fail", CstSkip, CstSkip),
             End
         )
@@ -84,7 +84,7 @@ let tests = [
     );
     (* 5 - include executes fun enclaved *)
     execWithFailure (
-        Enclave("enc",
+        Enclave(
             Secret("pass", CstS "rightpw",
                 Secret("check", Fun("s", Prim("=", Var "s", Var "pass")),
                     Gateway("check",
@@ -106,7 +106,7 @@ let tests = [
     );
     (* 6 - include access secret var *)
     execWithFailure (
-        Enclave("enc",
+        Enclave(
             Secret("pass", CstS "rightpw",
                 Secret("check", Fun("s", Prim("=", Var "s", Var "pass")),
                     Gateway("check",
@@ -162,7 +162,6 @@ let tests = [
     execWithFailure(
         Let("outside", CstS "str1",
             Enclave(
-                "encl",
                 Secret("outside", CstS "str2", CstSkip),
                 End
             )
