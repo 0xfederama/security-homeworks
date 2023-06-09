@@ -1,2 +1,9 @@
 (test
- (name hw2))
+ (name test_hw1)
+ (libraries hw2)
+ (modules test_hw1))
+
+(test
+ (name test_hw2)
+ (libraries hw2)
+ (modules test_hw2))
