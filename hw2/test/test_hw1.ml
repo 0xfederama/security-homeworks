@@ -28,6 +28,8 @@ let execWithoutFailure test ind =
    11- [ ok ] execute untrusted code
    12- [fail] enclave declares a variable already declared outside
    13- [ ok ] call a free enclaved function from the outside
+   14- [fail] gateway something that is not a function
+   15- [fail] define an enclave inside untrusted code
 *)
 let tests =
   [
@@ -138,6 +140,17 @@ let tests =
     execWithoutFailure
       (Enclave
          (Let ("fun", Fun ("arg", CstSkip), CstSkip), Call (Var "fun", CstSkip)));
+    (* 14 - gateway something that is not a function *)
+    execWithFailure
+      (Enclave
+         ( Secret ("pass", CstS "pw", Gateway ("pass", CstSkip)),
+           Print (Var "pass") ));
+    (* 15 - define an enclave inside untrusted code *)
+    execWithFailure
+      (Let
+         ( "untr",
+           IncUntrusted (Enclave (CstSkip, CstSkip)),
+           Execute ("untr", CstSkip) ));
   ]
 
 let _ =

@@ -17,6 +17,7 @@ type expr =
   | Print of expr
   | IncUntrusted of expr
   | Execute of ide * expr
+  | Declassify of ide * expr
 
 type sec_level =
   | High (* inside enclave *)
@@ -137,8 +138,8 @@ let rec eval (e : expr) (env : (ide, value * sec_level) Hashtbl.t)
         let idval = lookup env id in
         let newval =
           match idval with
-          | x, High -> (x, Normal)
-          | _, _ -> failwith "can only gateway a secret"
+          | Closure (x, y, z), High -> (Closure (x, y, z), Normal)
+          | _, _ -> failwith "can only gateway a secret function"
         in
         replace env id newval |> ignore;
         eval rest env High
@@ -155,6 +156,20 @@ let rec eval (e : expr) (env : (ide, value * sec_level) Hashtbl.t)
         | _ -> failwith (id ^ " is not untrusted code"))
         |> ignore;
         eval rest env Normal
+  (* HW2 *)
+  | Declassify (id, rest) ->
+      if trust <> High then failwith "can declassify only inside enclaves"
+      else if not (has_key env id) then failwith (id ^ " not defined")
+      else
+        let idval = lookup env id in
+        let newval =
+          match idval with
+          | Closure (_, _, _), _ -> failwith "cannot declassify a function"
+          | x, High -> (x, Low)
+          | _, _ -> failwith "can only declassify a secret variable"
+        in
+        replace env id newval |> ignore;
+        eval rest env High
 
 let run code =
   let henv : (string, value * sec_level) Hashtbl.t = Hashtbl.create 128 in

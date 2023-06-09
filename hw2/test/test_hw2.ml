@@ -15,14 +15,31 @@ let execWithoutFailure test ind =
     Printf.printf "\027[1;31m[FAIL]\027[0m Test #%d failed: %s\n" ind f
 
 (* Possible cases (in order with the examples below)
-    1- [] 
+    1- [ ok ] use a declassified variable
+    2- [fail] declassify a variable outside an enclave
+    3- [ ok ] use a declassified variable inside untrusted code
+    4- [fail] declassify a function
 *)
 let tests =
   [
-    (* TODO: remove tests hw1 *)
-    execWithFailure (Let ("f", Fun ("arg", CstSkip), Execute ("f", CstSkip)));
+    (* 1 - use a declassified variable *)
     execWithoutFailure
-      (Let ("untr", IncUntrusted CstSkip, Execute ("untr", CstSkip)));
+      (Enclave
+         (Secret ("pass", CstS "pw", Declassify ("pass", CstSkip)), Var "pass"));
+    (* 2 - declassify a variable outside an enclave *)
+    execWithFailure
+      (Enclave
+         (Secret ("pass", CstS "pw", CstSkip), Declassify ("pass", CstSkip)));
+    (* 3 - use a declassified variable inside untrusted code *)
+    execWithoutFailure
+      (Enclave
+         ( Secret ("pass", CstS "pw", Declassify ("pass", CstSkip)),
+           Let ("untr", IncUntrusted (Var "pass"), Execute ("untr", CstSkip)) ));
+    (* 4 - declassify a function *)
+    execWithFailure
+      (Enclave
+         ( Secret ("pass", Fun ("arg", CstSkip), Declassify ("pass", CstSkip)),
+           Var "pass" ));
   ]
 
 let _ =
